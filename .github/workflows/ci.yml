@@ -26,6 +26,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm --filter typeduck-example-basic generate --check
+      - run: pnpm --filter typeduck-example-basic typecheck
 
   bun:
     name: Bun / ubuntu-latest

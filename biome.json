@@ -24,6 +24,13 @@
     }
   },
   "files": {
-    "includes": ["**", "!pnpm-lock.yaml", "!dist", "!tests/fixtures"]
+    "includes": [
+      "**",
+      "!pnpm-lock.yaml",
+      "!dist",
+      "!tests/fixtures",
+      "!**/typeduck.d.ts",
+      "!**/*.md"
+    ]
   }
 }
