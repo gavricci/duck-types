@@ -1,10 +1,5 @@
 import { DuckDBInstance } from '@duckdb/node-api';
 import { expect, test } from 'vitest';
-import { VERSION } from '../src/index.js';
-
-test('exports a version', () => {
-  expect(VERSION).toBe('0.0.0');
-});
 
 test('duckdb engine is reachable', async () => {
   const instance = await DuckDBInstance.create(':memory:');

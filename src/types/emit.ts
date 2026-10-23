@@ -1,15 +1,25 @@
 import { type DuckDBType, DuckDBTypeId } from '@duckdb/node-api';
 
 /**
- * Renders a DuckDB type as TypeScript type source text, matching the shape
- * `@duckdb/node-api` produces through its JS value converter
- * (`getRowObjectsJS` and friends), with nested types resolved exactly instead
- * of bottoming out at `JS`.
+ * Which side of the engine boundary a type is rendered for.
+ *
+ * `output` is what `@duckdb/node-api` hands back through its JS value
+ * converter (`getRowObjectsJS` and friends). `input` is what `jsToDuckDBValue`
+ * accepts when binding a parameter; it is wider where the converter is lenient
+ * (a BIGINT parameter takes `number` as well as `bigint`).
+ */
+export type Direction = 'output' | 'input';
+
+/**
+ * Renders a DuckDB type as TypeScript type source text, with nested types
+ * resolved exactly instead of bottoming out at `JS`.
  *
  * Nullability is not part of the type: DuckDB does not report whether a result
  * column can be NULL, so callers wrap with `nullable()` where it applies.
  */
-export function tsTypeFor(type: DuckDBType): string {
+export function tsTypeFor(type: DuckDBType, direction: Direction = 'output'): string {
+  const input = direction === 'input';
+  const nested = (t: DuckDBType) => nullable(tsTypeFor(t, direction));
   switch (type.typeId) {
     case DuckDBTypeId.BOOLEAN:
       return 'boolean';
@@ -21,13 +31,15 @@ export function tsTypeFor(type: DuckDBType): string {
     case DuckDBTypeId.UINTEGER:
     case DuckDBTypeId.FLOAT:
     case DuckDBTypeId.DOUBLE:
-    case DuckDBTypeId.DECIMAL:
       return 'number';
+    case DuckDBTypeId.DECIMAL:
+      return input ? 'number | bigint' : 'number';
     case DuckDBTypeId.BIGINT:
     case DuckDBTypeId.UBIGINT:
     case DuckDBTypeId.HUGEINT:
     case DuckDBTypeId.UHUGEINT:
     case DuckDBTypeId.BIGNUM:
+      return input ? 'bigint | number' : 'bigint';
     case DuckDBTypeId.TIME:
     case DuckDBTypeId.TIME_NS:
       return 'bigint';
@@ -54,31 +66,28 @@ export function tsTypeFor(type: DuckDBType): string {
       return type.values.map(stringLiteral).join(' | ');
     case DuckDBTypeId.LIST:
     case DuckDBTypeId.ARRAY:
-      return `${parenthesize(nullable(tsTypeFor(type.valueType)))}[]`;
+      return `${input ? 'readonly ' : ''}${parenthesize(nested(type.valueType))}[]`;
     case DuckDBTypeId.MAP:
-      return `{ key: ${nullable(tsTypeFor(type.keyType))}; value: ${nullable(tsTypeFor(type.valueType))} }[]`;
+      return `${input ? 'readonly ' : ''}{ key: ${nested(type.keyType)}; value: ${nested(type.valueType)} }[]`;
     case DuckDBTypeId.STRUCT:
       if (type.isTuple) {
-        return `[${type.entryTypes.map((t) => nullable(tsTypeFor(t))).join(', ')}]`;
+        return `${input ? 'readonly ' : ''}[${type.entryTypes.map(nested).join(', ')}]`;
       }
       if (type.entryCount === 0) {
         return '{}';
       }
       return `{ ${type.entryNames
-        .map(
-          (name, i) =>
-            `${propertyKey(name)}: ${nullable(tsTypeFor(type.entryTypes[i] as DuckDBType))}`,
-        )
+        .map((name, i) => `${propertyKey(name)}: ${nested(type.entryTypes[i] as DuckDBType)}`)
         .join('; ')} }`;
     case DuckDBTypeId.UNION:
       return type.memberTags
         .map(
           (tag, i) =>
-            `{ tag: ${stringLiteral(tag)}; value: ${nullable(tsTypeFor(type.memberTypes[i] as DuckDBType))} }`,
+            `{ tag: ${stringLiteral(tag)}; value: ${nested(type.memberTypes[i] as DuckDBType)} }`,
         )
         .join(' | ');
     case DuckDBTypeId.VARIANT:
-      return 'JS';
+      return input ? 'boolean | number | bigint | string' : 'JS';
     case DuckDBTypeId.SQLNULL:
       return 'null';
     case DuckDBTypeId.ANY:
