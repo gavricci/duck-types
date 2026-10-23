@@ -1,7 +1,7 @@
 {
   "name": "typeduck",
   "version": "0.1.0",
-  "description": "Type-safe DuckDB client for TypeScript \u2014 row types inferred from your SQL, plain JS values out of the box.",
+  "description": "Type-safe DuckDB client for TypeScript — row types inferred from your SQL, plain JS values out of the box.",
   "license": "MIT",
   "author": "Oleksandr Havrylov",
   "repository": {
@@ -60,6 +60,7 @@
     "@types/node": "^22.20.5",
     "tsdown": "^0.23.1",
     "typescript": "^5.9.3",
+    "unrun": "^0.3.1",
     "vitest": "^5.0.5"
   },
   "dependencies": {

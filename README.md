@@ -130,7 +130,7 @@ Every column and every nested element is `| null`: DuckDB does not report nullab
 
 ## Example
 
-[`examples/basic`](examples/basic) is a complete project: schema, CSV load, two typed queries, config file.
+[`examples/basic`](examples/basic) is a complete project: schema, CSV load, two typed queries, config file. (Inside this repo it calls the CLI from `dist/`; in your project the script is just `typeduck generate`.)
 
 ```sh
 pnpm install && pnpm build
