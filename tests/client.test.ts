@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, expectTypeOf, test } from 'vitest';
+import { afterAll, beforeAll, expect, expectTypeOf, test, vi } from 'vitest';
 import { type Client, createClient, type Queries, sql } from '../src/index.js';
 
 declare module '../src/query.js' {
@@ -76,4 +76,65 @@ test('Queries is the augmentation point', () => {
   expectTypeOf<Queries['select count(*) as n from users']['row']>().toEqualTypeOf<{
     n: bigint | null;
   }>();
+});
+
+test('prepared statements are cached per SQL text', async () => {
+  const prepare = vi.spyOn(db.raw, 'prepare');
+  const q = sql('select 7 as seven');
+  await db.all(q);
+  await db.all(q);
+  await db.all(sql('select 7 as seven'));
+  expect(prepare).toHaveBeenCalledTimes(1);
+  prepare.mockRestore();
+});
+
+test('concurrent calls on one client are serialised', async () => {
+  const results = await Promise.all([
+    db.one(byId, { id: 1 }),
+    db.one(count),
+    db.all(sql('select name from users order by id')),
+    db.one(byId, { id: 2 }),
+  ]);
+  expect(results[0]?.name).toBe('ann');
+  expect(results[1]?.n).toBe(2n);
+  expect(results[2]).toHaveLength(2);
+  expect(results[3]?.name).toBe('bob');
+});
+
+test('stream holds the connection until done', async () => {
+  const seen: string[] = [];
+  const consume = (async () => {
+    for await (const row of db.stream(sql('select name from users order by id'))) {
+      seen.push(`stream:${row.name}`);
+    }
+  })();
+  const after = db.one(count).then(() => seen.push('count'));
+  await Promise.all([consume, after]);
+  expect(seen).toEqual(['stream:ann', 'stream:bob', 'count']);
+});
+
+test('run on a select changes no rows', async () => {
+  expect(await db.run(count)).toBe(0);
+});
+
+test('undefined parameter is rejected', async () => {
+  // @ts-expect-error undefined is not a valid parameter value
+  await expect(db.all(byId, { id: undefined })).rejects.toThrow(/\$id is undefined/);
+});
+
+test('transaction commits', async () => {
+  await db.transaction(async (tx) => {
+    await tx.run(insert, [3, 'cid', new Date(0)]);
+  });
+  expect((await db.one(count)).n).toBe(3n);
+});
+
+test('transaction rolls back when the body throws', async () => {
+  await expect(
+    db.transaction(async (tx) => {
+      await tx.run(insert, [4, 'dee', new Date(0)]);
+      throw new Error('boom');
+    }),
+  ).rejects.toThrow('boom');
+  expect((await db.one(count)).n).toBe(3n);
 });

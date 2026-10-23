@@ -42,3 +42,17 @@ test('uninferrable parameter type is null', async () => {
 test('errors propagate from prepare', async () => {
   await expect(describeQuery(connection, 'select * from nope')).rejects.toThrow(/nope/);
 });
+
+test('? parameters are positional and numbered', async () => {
+  const d = await describeQuery(connection, 'select id from users where id = ? and name = ?');
+  expect(d.positional).toBe(true);
+  expect(d.params.map((p) => [p.name, String(p.type)])).toEqual([
+    ['1', 'INTEGER'],
+    ['2', 'VARCHAR'],
+  ]);
+});
+
+test('a named parameter used twice is reported once', async () => {
+  const d = await describeQuery(connection, 'select $id::int as a, $id::int as b');
+  expect(d.params.map((p) => p.name)).toEqual(['id']);
+});

@@ -26,7 +26,20 @@ type ParamArgs<P> = unknown extends P
       ? []
       : [params: P];
 
+/**
+ * One DuckDB connection with typed query methods.
+ *
+ * A connection runs one statement at a time, so calls on a client are
+ * serialised: a second `all()` waits for the first to finish, and a
+ * `stream()` holds the connection until its iterator is done or returned.
+ * Open several clients for parallel queries.
+ *
+ * Prepared statements are cached by SQL text and reused across calls.
+ */
 export class Client {
+  private readonly prepared = new Map<string, DuckDBPreparedStatement>();
+  private tail: Promise<unknown> = Promise.resolve();
+
   private constructor(
     private readonly instance: DuckDBInstance,
     private readonly connection: DuckDBConnection,
@@ -46,13 +59,11 @@ export class Client {
 
   /** Runs the query and returns every row. */
   async all<Row, P>(query: Query<Row, P>, ...args: ParamArgs<P>): Promise<Row[]> {
-    const prepared = await this.bind(query, args[0]);
-    try {
+    return this.exclusive(async () => {
+      const prepared = await this.bind(query, args[0]);
       const reader = await prepared.runAndReadAll();
       return reader.getRowObjectsJS() as Row[];
-    } finally {
-      prepared.destroySync();
-    }
+    });
   }
 
   /** Runs the query and returns its single row; throws when there is not exactly one. */
@@ -72,19 +83,21 @@ export class Client {
 
   /** Runs a statement for its effect and returns the number of rows changed. */
   async run<Row, P>(query: Query<Row, P>, ...args: ParamArgs<P>): Promise<number> {
-    const prepared = await this.bind(query, args[0]);
-    try {
+    return this.exclusive(async () => {
+      const prepared = await this.bind(query, args[0]);
       const result = await prepared.run();
       return result.rowsChanged;
-    } finally {
-      prepared.destroySync();
-    }
+    });
   }
 
-  /** Streams rows as DuckDB produces them, without materialising the result. */
+  /**
+   * Streams rows as DuckDB produces them, without materialising the result.
+   * Holds the connection until the iterator finishes or is returned early.
+   */
   async *stream<Row, P>(query: Query<Row, P>, ...args: ParamArgs<P>): AsyncGenerator<Row> {
-    const prepared = await this.bind(query, args[0]);
+    const release = await this.acquire();
     try {
+      const prepared = await this.bind(query, args[0]);
       const result = await prepared.stream();
       try {
         for await (const chunk of result.yieldRowObjectJs()) {
@@ -96,39 +109,90 @@ export class Client {
         result.closeSync();
       }
     } finally {
-      prepared.destroySync();
+      release();
+    }
+  }
+
+  /**
+   * Runs `body` inside `BEGIN` … `COMMIT`, rolling back if it throws.
+   *
+   * The transaction is not isolated from other callers of the same client:
+   * they share the connection, so their statements run inside it too.
+   */
+  async transaction<T>(body: (tx: Client) => Promise<T>): Promise<T> {
+    await this.connection.run('begin transaction');
+    try {
+      const result = await body(this);
+      await this.connection.run('commit');
+      return result;
+    } catch (error) {
+      await this.connection.run('rollback');
+      throw error;
     }
   }
 
   close(): void {
+    for (const statement of this.prepared.values()) {
+      statement.destroySync();
+    }
+    this.prepared.clear();
     this.connection.closeSync();
     this.instance.closeSync();
+  }
+
+  private async exclusive<T>(work: () => Promise<T>): Promise<T> {
+    const release = await this.acquire();
+    try {
+      return await work();
+    } finally {
+      release();
+    }
+  }
+
+  /** Waits for the connection to be free and returns the function that frees it again. */
+  private acquire(): Promise<() => void> {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const ready = this.tail.then(() => release);
+    this.tail = held;
+    return ready;
   }
 
   private async bind(
     query: Query<unknown, unknown>,
     params: unknown,
   ): Promise<DuckDBPreparedStatement> {
-    const prepared = await this.connection.prepare(query.text);
-    try {
-      if (Array.isArray(params)) {
-        for (const [i, value] of params.entries()) {
-          bindOne(prepared, i + 1, value);
-        }
-      } else if (params && typeof params === 'object') {
-        for (const [name, value] of Object.entries(params)) {
-          bindOne(prepared, prepared.parameterIndex(name), value);
-        }
-      }
-      return prepared;
-    } catch (error) {
-      prepared.destroySync();
-      throw error;
+    let prepared = this.prepared.get(query.text);
+    if (prepared === undefined) {
+      prepared = await this.connection.prepare(query.text);
+      this.prepared.set(query.text, prepared);
+    } else {
+      prepared.clearBindings();
     }
+    if (Array.isArray(params)) {
+      for (const [i, value] of params.entries()) {
+        bindOne(prepared, i + 1, String(i + 1), value);
+      }
+    } else if (params && typeof params === 'object') {
+      for (const [name, value] of Object.entries(params)) {
+        bindOne(prepared, prepared.parameterIndex(name), name, value);
+      }
+    }
+    return prepared;
   }
 }
 
-function bindOne(prepared: DuckDBPreparedStatement, index: number, value: unknown): void {
+function bindOne(
+  prepared: DuckDBPreparedStatement,
+  index: number,
+  name: string,
+  value: unknown,
+): void {
+  if (value === undefined) {
+    throw new TypeError(`Parameter $${name} is undefined; pass null for SQL NULL`);
+  }
   let type: DuckDBType | undefined;
   try {
     type = prepared.parameterType(index);
@@ -138,7 +202,7 @@ function bindOne(prepared: DuckDBPreparedStatement, index: number, value: unknow
   if (type === undefined) {
     if (value !== null && typeof value === 'object') {
       throw new TypeError(
-        `Parameter ${index} has no inferred type; cast it in SQL (e.g. $${index}::timestamp) to bind an object`,
+        `Parameter $${name} has no inferred type; cast it in SQL (e.g. $${name}::timestamp) to bind an object`,
       );
     }
     prepared.bindValue(index, value as DuckDBValue);
