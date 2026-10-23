@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { glob } from 'tinyglobby';
 import { describeQuery } from '../describe.js';
@@ -12,6 +13,7 @@ export interface GenerateOptions {
   database?: string | undefined;
   /** SQL file to run first, e.g. the schema DDL. */
   init?: string | undefined;
+  /** Directory globs, `database` and `init` are resolved against; also where relative file paths in SQL point. */
   cwd?: string | undefined;
 }
 
@@ -35,13 +37,17 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
   });
   const queries = (await Promise.all(files.sort().map(scanFile))).flat();
 
-  const instance = await DuckDBInstance.create(options.database ?? ':memory:', {
-    access_mode: options.database ? 'READ_ONLY' : 'READ_WRITE',
-  });
+  const instance = await DuckDBInstance.create(
+    options.database ? resolve(cwd, options.database) : ':memory:',
+    { access_mode: options.database ? 'READ_ONLY' : 'READ_WRITE' },
+  );
   const connection = await instance.connect();
   try {
+    // Relative paths in SQL (`read_parquet('data/x.parquet')`) resolve against
+    // the process cwd; point DuckDB at the project directory instead.
+    await connection.run(`set file_search_path = ${quoted(cwd)}`);
     if (options.init) {
-      await connection.run(await readFile(options.init, 'utf8'));
+      await connection.run(await readFile(resolve(cwd, options.init), 'utf8'));
     }
     const entries = new Map<string, GeneratedEntry>();
     const diagnostics: Diagnostic[] = [];
@@ -61,10 +67,7 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
           }
         }
       } catch (error) {
-        diagnostics.push({
-          query,
-          message: (error as Error).message.split('\n')[0] ?? String(error),
-        });
+        diagnostics.push({ query, message: describeError(error) });
       }
     }
     return { declarations: emitDeclarations([...entries.values()]), queries, diagnostics };
@@ -72,4 +75,16 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
     connection.closeSync();
     instance.closeSync();
   }
+}
+
+function describeError(error: unknown): string {
+  const message = (error as Error).message.split('\n')[0] ?? String(error);
+  if (/No files found that match/.test(message)) {
+    return `${message} (relative paths resolve against the project directory; pass --cwd to change it)`;
+  }
+  return message;
+}
+
+function quoted(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
 }
