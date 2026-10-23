@@ -1,6 +1,6 @@
 {
   "name": "typeduck",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Type-safe DuckDB client for TypeScript \u2014 row types inferred from your SQL, plain JS values out of the box.",
   "license": "MIT",
   "author": "Oleksandr Havrylov",
@@ -33,6 +33,7 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "engines": {
@@ -67,5 +68,9 @@
   },
   "bin": {
     "typeduck": "./dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
