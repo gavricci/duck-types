@@ -25,9 +25,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      # tsdown needs Node 22+; the package itself runs on 20 (covered by the tests above).
       - run: pnpm build
+        if: matrix.node != 20
       - run: pnpm --filter typeduck-example-basic generate --check
+        if: matrix.node != 20
       - run: pnpm --filter typeduck-example-basic typecheck
+        if: matrix.node != 20
 
   bun:
     name: Bun / ubuntu-latest

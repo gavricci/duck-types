@@ -1,6 +1,6 @@
 import { watch } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, relative, resolve } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { type GenerateOptions, generate } from '../generate/index.js';
 
@@ -73,19 +73,19 @@ export async function main(argv: string[], options: MainOptions = {}): Promise<n
   const runOnce = async (): Promise<number> => {
     const result = await generate(generateOptions);
     for (const { query, message } of result.diagnostics) {
-      stderr(`${relative(cwd, query.file)}:${query.line}:${query.column}: ${message}`);
+      stderr(`${rel(cwd, query.file)}:${query.line}:${query.column}: ${message}`);
     }
     if (values.check) {
       const current = await readFile(out, 'utf8').catch(() => null);
       if (current !== result.declarations) {
-        stderr(`${relative(cwd, out)} is out of date; run typeduck generate`);
+        stderr(`${rel(cwd, out)} is out of date; run typeduck generate`);
         return 1;
       }
     } else {
       await writeFile(out, result.declarations);
     }
     const typed = result.queries.length - result.diagnostics.length;
-    stderr(`${relative(cwd, out)}: ${typed} of ${result.queries.length} queries typed`);
+    stderr(`${rel(cwd, out)}: ${typed} of ${result.queries.length} queries typed`);
     return result.diagnostics.length > 0 ? 1 : 0;
   };
 
@@ -95,6 +95,11 @@ export async function main(argv: string[], options: MainOptions = {}): Promise<n
   }
   await watchAndRerun(cwd, generateOptions.include, out, runOnce, options.signal);
   return 0;
+}
+
+/** A path relative to `cwd`, with `/` separators on every platform so messages are stable. */
+function rel(cwd: string, path: string): string {
+  return relative(cwd, path).split(sep).join('/');
 }
 
 async function readConfig(cwd: string): Promise<Config> {
