@@ -71,7 +71,6 @@
     "typeduck": "./dist/cli.js"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   }
 }

@@ -94,7 +94,11 @@ await db.all(ordersFor, { name: 'ann' }); // error: expected { customer }
 
 </td></tr></table>
 
-<!-- screenshot: docs/autocomplete.png — hover over `rows` in examples/basic/src/app.ts -->
+## In the editor
+
+![Add a column to the SQL on the right; the row type on the left follows](https://raw.githubusercontent.com/gavricci/typeduck/main/docs/demo.gif)
+
+What happens, left to right: `orders` is typed from the query in `queries.ts`; `customer` is added to the `select`; `typeduck generate --watch` regenerates `typeduck.d.ts` on save; the hover now shows `customer: string | null`. Nothing was edited by hand except the SQL.
 
 ## Install
 
