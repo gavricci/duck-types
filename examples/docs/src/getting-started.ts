@@ -1,4 +1,4 @@
-import { createClient, sql } from 'typeduck';
+import { createClient, sql } from 'duck-types';
 
 export const recentOrders = sql(`
   select id, customer, total, placed_at

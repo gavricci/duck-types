@@ -1,16 +1,16 @@
-# typeduck
+# duck-types
 
 Type-safe DuckDB for TypeScript. Write SQL, get row types — inferred by DuckDB itself, not by a parser.
 
-[![npm](https://img.shields.io/npm/v/typeduck)](https://www.npmjs.com/package/typeduck)
-[![Node 20](https://img.shields.io/github/actions/workflow/status/gavricci/typeduck/node-20.yml?label=Node%2020)](https://github.com/gavricci/typeduck/actions/workflows/node-20.yml)
-[![Node 22](https://img.shields.io/github/actions/workflow/status/gavricci/typeduck/node-22.yml?label=Node%2022)](https://github.com/gavricci/typeduck/actions/workflows/node-22.yml)
-[![Node 24](https://img.shields.io/github/actions/workflow/status/gavricci/typeduck/node-24.yml?label=Node%2024)](https://github.com/gavricci/typeduck/actions/workflows/node-24.yml)
-[![Bun](https://img.shields.io/github/actions/workflow/status/gavricci/typeduck/bun.yml?label=Bun)](https://github.com/gavricci/typeduck/actions/workflows/bun.yml)
-[![MIT](https://img.shields.io/npm/l/typeduck)](LICENSE)
+[![npm](https://img.shields.io/npm/v/duck-types)](https://www.npmjs.com/package/duck-types)
+[![Node 20](https://img.shields.io/github/actions/workflow/status/gavricci/duck-types/node-20.yml?label=Node%2020)](https://github.com/gavricci/duck-types/actions/workflows/node-20.yml)
+[![Node 22](https://img.shields.io/github/actions/workflow/status/gavricci/duck-types/node-22.yml?label=Node%2022)](https://github.com/gavricci/duck-types/actions/workflows/node-22.yml)
+[![Node 24](https://img.shields.io/github/actions/workflow/status/gavricci/duck-types/node-24.yml?label=Node%2024)](https://github.com/gavricci/duck-types/actions/workflows/node-24.yml)
+[![Bun](https://img.shields.io/github/actions/workflow/status/gavricci/duck-types/bun.yml?label=Bun)](https://github.com/gavricci/duck-types/actions/workflows/bun.yml)
+[![MIT](https://img.shields.io/npm/l/duck-types)](LICENSE)
 
 ```ts
-import { createClient, sql } from 'typeduck';
+import { createClient, sql } from 'duck-types';
 
 const db = await createClient('orders.duckdb');
 
@@ -20,7 +20,7 @@ const rows = await db.all(ordersFor, { customer: 'ann' });
 //    ^? { id: number | null; total: number | null; placed_at: Date | null }[]
 ```
 
-Run `typeduck generate` once (or in `--watch`), and every `sql('...')` in the project is typed — rows and parameters — through one generated `typeduck.d.ts`. No schema DSL, no query builder, no build plugin.
+Run `duck-types generate` once (or in `--watch`), and every `sql('...')` in the project is typed — rows and parameters — through one generated `duck-types.d.ts`. No schema DSL, no query builder, no build plugin.
 
 ## Before → after
 
@@ -96,9 +96,9 @@ await db.all(ordersFor, { name: 'ann' }); // error: expected { customer }
 
 ## In the editor
 
-![Add a column to the SQL on the right; the row type on the left follows](https://raw.githubusercontent.com/gavricci/typeduck/main/docs/demo.gif)
+![Add a column to the SQL on the right; the row type on the left follows](https://raw.githubusercontent.com/gavricci/duck-types/main/docs/demo.gif)
 
-What happens, left to right: `orders` is typed from the query in `queries.ts`; `customer` is added to the `select`; `typeduck generate --watch` regenerates `typeduck.d.ts` on save; the hover now shows `customer: string | null`. Nothing was edited by hand except the SQL.
+What happens, left to right: `orders` is typed from the query in `queries.ts`; `customer` is added to the `select`; `duck-types generate --watch` regenerates `duck-types.d.ts` on save; the hover now shows `customer: string | null`. Nothing was edited by hand except the SQL.
 
 ## Install
 
@@ -107,37 +107,37 @@ What happens, left to right: `orders` is typed from the query in `queries.ts`; `
 ### pnpm
 
 ```sh
-pnpm add typeduck @duckdb/node-api
-pnpm typeduck generate
+pnpm add duck-types @duckdb/node-api
+pnpm duck-types generate
 ```
 
 ### npm
 
 ```sh
-npm install typeduck @duckdb/node-api
-npx typeduck generate
+npm install duck-types @duckdb/node-api
+npx duck-types generate
 ```
 
 ### bun
 
 ```sh
-bun add typeduck @duckdb/node-api
-bunx typeduck generate
+bun add duck-types @duckdb/node-api
+bunx duck-types generate
 ```
 
-Node ≥ 20 or Bun. Put the options in `typeduck.config.json` so the command stays that short:
+Node ≥ 20 or Bun. Put the options in `duck-types.config.json` so the command stays that short:
 
 ```json
-{ "include": ["src/**/*.ts"], "init": "schema.sql", "out": "typeduck.d.ts" }
+{ "include": ["src/**/*.ts"], "init": "schema.sql", "out": "duck-types.d.ts" }
 ```
 
 ## How it works
 
-`typeduck generate` scans your sources for `sql('...')`, hands each statement to DuckDB with `PREPARE`, and reads back the column and parameter types DuckDB resolved — nothing is executed. It writes them as a module augmentation keyed by the exact SQL text:
+`duck-types generate` scans your sources for `sql('...')`, hands each statement to DuckDB with `PREPARE`, and reads back the column and parameter types DuckDB resolved — nothing is executed. It writes them as a module augmentation keyed by the exact SQL text:
 
 ```ts
-// typeduck.d.ts — generated
-declare module 'typeduck' {
+// duck-types.d.ts — generated
+declare module 'duck-types' {
   interface Queries {
     'select id, total, placed_at from orders where customer = $customer': {
       row: { id: number | null; total: number | null; placed_at: Date | null };
@@ -166,7 +166,7 @@ Every code block in the docs comes from [`examples/docs`](examples/docs), which 
 
 - `sql()` needs a string literal — `'...'` or a template literal without `${}`. Interpolated strings fall back to untyped rows.
 - Parameter types come from context: `where id = $id` is typed, a bare `select $x` needs `$x::integer`.
-- Every column is `| null`; DuckDB does not report nullability and typeduck does not guess.
+- Every column is `| null`; DuckDB does not report nullability and duck-types does not guess.
 - Native DuckDB only (`@duckdb/node-api`); no `duckdb-wasm` yet. One client is one connection.
 
 ## Roadmap

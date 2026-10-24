@@ -9,5 +9,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["src", "typeduck.d.ts"]
+  "include": ["src", "duck-types.d.ts"]
 }

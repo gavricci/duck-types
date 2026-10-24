@@ -1,5 +1,5 @@
-// examples/docs/src/migrating-after.ts — the same with typeduck
-import { createClient, sql } from 'typeduck';
+// examples/docs/src/migrating-after.ts — the same with duck-types
+import { createClient, sql } from 'duck-types';
 
 const ordersFor = sql('select id, total, placed_at from orders where customer = $customer');
 

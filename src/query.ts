@@ -1,11 +1,11 @@
 import type { JS } from '@duckdb/node-api';
 
 /**
- * The type table `typeduck generate` fills in through module augmentation:
+ * The type table `duck-types generate` fills in through module augmentation:
  * one entry per SQL string found in the project, keyed by the exact text.
  *
  * ```ts
- * declare module 'typeduck' {
+ * declare module 'duck-types' {
  *   interface Queries {
  *     'select id from users where id = $id': {
  *       row: { id: number | null };

@@ -1,4 +1,4 @@
-import { sql } from 'typeduck';
+import { sql } from 'duck-types';
 
 // Typed from the column it is compared with: $id is INTEGER.
 export const byId = sql('select id from orders where id = $id');

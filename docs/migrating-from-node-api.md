@@ -1,6 +1,6 @@
 # Migrating from @duckdb/node-api
 
-typeduck is a layer on top of `@duckdb/node-api`, not a replacement: the same engine, the same values, and `db.raw` is the connection you already have. Migration is mostly deletion.
+duck-types is a layer on top of `@duckdb/node-api`, not a replacement: the same engine, the same values, and `db.raw` is the connection you already have. Migration is mostly deletion.
 
 ## Before
 
@@ -45,8 +45,8 @@ Three things in there are maintained by hand and checked by nobody: the `OrderRo
 ## After
 
 ```ts
-// examples/docs/src/migrating-after.ts — the same with typeduck
-import { createClient, sql } from 'typeduck';
+// examples/docs/src/migrating-after.ts — the same with duck-types
+import { createClient, sql } from 'duck-types';
 
 const ordersFor = sql('select id, total, placed_at from orders where customer = $customer');
 
@@ -61,7 +61,7 @@ export async function main() {
 
 ## Line by line
 
-| `@duckdb/node-api` | typeduck |
+| `@duckdb/node-api` | duck-types |
 |---|---|
 | `DuckDBInstance.create(path)` + `instance.connect()` | `createClient(path)` |
 | `connection.prepare(sql)` + `bind(values)` + `runAndReadAll()` | `db.all(sql(text), values)` |
@@ -75,7 +75,7 @@ export async function main() {
 
 ## What stays the same
 
-- Values: a `BIGINT` is still a `bigint`, a `TIMESTAMP` is still a `Date`. typeduck uses the same converter you would reach for with `getRowObjectsJS()`; see [Type mapping](types.md).
+- Values: a `BIGINT` is still a `bigint`, a `TIMESTAMP` is still a `Date`. duck-types uses the same converter you would reach for with `getRowObjectsJS()`; see [Type mapping](types.md).
 - The engine: your DuckDB version is whatever `@duckdb/node-api` you installed.
 - Anything advanced: appenders, scalar and table functions, `interrupt()`, `progress` — all through `db.raw`.
 

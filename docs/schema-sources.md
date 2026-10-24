@@ -5,7 +5,7 @@ The generator describes each query by preparing it in a DuckDB connection. What 
 ## `--init`: run DDL first
 
 ```sh
-typeduck generate --init schema.sql
+duck-types generate --init schema.sql
 ```
 
 An in-memory database is created, `schema.sql` is executed, then every query is prepared. Anything SQL can do is allowed in the file: `CREATE TABLE`, `CREATE TYPE … AS ENUM`, `CREATE MACRO`, `INSTALL`/`LOAD` for extensions, `ATTACH` for other databases.
@@ -20,7 +20,7 @@ This is the default to reach for: the schema lives next to the code and reviews 
 ## `--database`: a real file
 
 ```sh
-typeduck generate --database analytics.duckdb
+duck-types generate --database analytics.duckdb
 ```
 
 The file is opened **read-only** and queries are prepared against its catalog. Use this when the schema is owned elsewhere (a pipeline writes the file, you only read it). The database is never modified; `generate` runs no query, it only prepares them.
@@ -60,7 +60,7 @@ Put the `ATTACH` in the init file:
 attach 'https://example.com/warehouse.duckdb' as warehouse (read_only);
 ```
 
-Then query `warehouse.orders` as usual. The same works for MotherDuck (`attach 'md:'`) and for DuckLake/Iceberg catalogs once the extension is loaded in the same file. Credentials go through DuckDB's own secret manager (`CREATE SECRET …`), never into `typeduck.config.json`.
+Then query `warehouse.orders` as usual. The same works for MotherDuck (`attach 'md:'`) and for DuckLake/Iceberg catalogs once the extension is loaded in the same file. Credentials go through DuckDB's own secret manager (`CREATE SECRET …`), never into `duck-types.config.json`.
 
 ## Which one?
 

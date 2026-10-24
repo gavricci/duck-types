@@ -1,6 +1,6 @@
 # Parameters
 
-DuckDB infers a parameter's type from where it is used, the same way it types any expression. typeduck reads that inference back and puts it in the `params` type. When DuckDB cannot infer, the generator says so and nothing is guessed.
+DuckDB infers a parameter's type from where it is used, the same way it types any expression. duck-types reads that inference back and puts it in the `params` type. When DuckDB cannot infer, the generator says so and nothing is guessed.
 
 ## Inferred from context
 

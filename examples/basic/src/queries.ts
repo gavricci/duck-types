@@ -1,4 +1,4 @@
-import { sql } from 'typeduck';
+import { sql } from 'duck-types';
 
 export const loadOrders = sql(`
   insert into orders

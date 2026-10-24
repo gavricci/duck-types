@@ -14,11 +14,11 @@ First release.
 
 - `sql('...')` — a SQL string that carries its row and parameter types, looked
   up in the `Queries` interface by exact text.
-- `typeduck generate` — scans sources for `sql()` calls, prepares each
-  statement in DuckDB and writes `typeduck.d.ts` with the resolved column and
+- `duck-types generate` — scans sources for `sql()` calls, prepares each
+  statement in DuckDB and writes `duck-types.d.ts` with the resolved column and
   parameter types. Supports `--init` (run DDL first), `--database` (describe
   against a file, read-only), `--watch`, `--check` for CI, `--cwd`, and
-  `typeduck.config.json` for defaults. Relative paths inside SQL resolve
+  `duck-types.config.json` for defaults. Relative paths inside SQL resolve
   against the project directory.
 - `createClient()` / `Client` over `@duckdb/node-api`: `all`, `one`,
   `maybeOne`, `run`, `stream`, `transaction`, `raw`, `close`. Calls on a
@@ -30,5 +30,5 @@ First release.
   `MAP`, `UNION` and `ENUM` resolved exactly; every column and nested element
   is nullable.
 
-[Unreleased]: https://github.com/gavricci/typeduck/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/gavricci/typeduck/releases/tag/v0.1.0
+[Unreleased]: https://github.com/gavricci/duck-types/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/gavricci/duck-types/releases/tag/v0.1.0

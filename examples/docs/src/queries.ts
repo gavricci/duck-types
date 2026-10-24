@@ -1,4 +1,4 @@
-import { type Client, createClient, sql } from 'typeduck';
+import { type Client, createClient, sql } from 'duck-types';
 
 const byId = sql('select id, customer, total from orders where id = $id');
 const byIds = sql('select id, customer from orders where id = $1 or id = $2');
@@ -40,7 +40,7 @@ export async function examples(db: Client) {
     await tx.run(insertOrder, { id: 12, customer: 'eve', total: 2, placed_at: new Date() });
   });
 
-  // Anything typeduck does not cover: the @duckdb/node-api connection.
+  // Anything duck-types does not cover: the @duckdb/node-api connection.
   await db.raw.run('checkpoint');
 
   return { rows, one, maybe, pair, n, changed };

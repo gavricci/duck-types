@@ -1,6 +1,6 @@
 # CI and workflow
 
-`typeduck.d.ts` is generated, committed, and checked — the same contract as a lockfile.
+`duck-types.d.ts` is generated, committed, and checked — the same contract as a lockfile.
 
 ## Commit the file
 
@@ -9,7 +9,7 @@ Yes, commit it. It makes `tsc` work on a fresh clone without DuckDB having run, 
 ## `--check` in CI
 
 ```sh
-typeduck generate --check
+duck-types generate --check
 ```
 
 Regenerates in memory and exits 1 if the result differs from the file on disk (or if any query failed to describe). Nothing is written.
@@ -17,33 +17,33 @@ Regenerates in memory and exits 1 if the result differs from the file on disk (o
 ```yaml
 # .github/workflows/ci.yml
 - run: pnpm install --frozen-lockfile
-- run: pnpm typeduck generate --check
+- run: pnpm duck-types generate --check
 - run: pnpm tsc --noEmit
 ```
 
-A failing check means someone changed a query, or the schema, without regenerating. The fix is `typeduck generate` and a commit.
+A failing check means someone changed a query, or the schema, without regenerating. The fix is `duck-types generate` and a commit.
 
 ## `--watch` in development
 
 ```sh
-typeduck generate --watch
+duck-types generate --watch
 ```
 
-Watches the directories your `include` globs start in and regenerates on change, debounced. Editor type errors update as you type SQL — which is the moment typeduck is actually fun.
+Watches the directories your `include` globs start in and regenerates on change, debounced. Editor type errors update as you type SQL — which is the moment duck-types is actually fun.
 
 ## Scripts
 
 ```json
 {
   "scripts": {
-    "generate": "typeduck generate",
-    "dev": "typeduck generate --watch",
-    "typecheck": "typeduck generate --check && tsc --noEmit"
+    "generate": "duck-types generate",
+    "dev": "duck-types generate --watch",
+    "typecheck": "duck-types generate --check && tsc --noEmit"
   }
 }
 ```
 
-Run with `pnpm generate`, `npm run generate` or `bun run generate` — the script is the same. If you prefer no script, the runners are `pnpm typeduck`, `npx typeduck`, `bunx typeduck`.
+Run with `pnpm generate`, `npm run generate` or `bun run generate` — the script is the same. If you prefer no script, the runners are `pnpm duck-types`, `npx duck-types`, `bunx duck-types`.
 
 ## Pre-commit
 
@@ -51,8 +51,8 @@ With [lefthook](https://github.com/evilmartians/lefthook), husky or a plain hook
 
 ```sh
 #!/bin/sh
-typeduck generate --check || {
-  echo "typeduck.d.ts is stale — run: typeduck generate"
+duck-types generate --check || {
+  echo "duck-types.d.ts is stale — run: duck-types generate"
   exit 1
 }
 ```

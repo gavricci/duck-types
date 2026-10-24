@@ -1,4 +1,4 @@
-import { sql } from 'typeduck';
+import { sql } from 'duck-types';
 
 // A table created by schema.sql (--init) or present in the database (--database).
 export const customers = sql('select distinct customer from orders order by 1');

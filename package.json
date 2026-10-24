@@ -1,15 +1,15 @@
 {
-  "name": "typeduck",
+  "name": "duck-types",
   "version": "0.1.0",
   "description": "Type-safe DuckDB client for TypeScript — row types inferred from your SQL, plain JS values out of the box.",
   "license": "MIT",
   "author": "Oleksandr Havrylov",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gavricci/typeduck.git"
+    "url": "git+https://github.com/gavricci/duck-types.git"
   },
-  "homepage": "https://github.com/gavricci/typeduck#readme",
-  "bugs": "https://github.com/gavricci/typeduck/issues",
+  "homepage": "https://github.com/gavricci/duck-types#readme",
+  "bugs": "https://github.com/gavricci/duck-types/issues",
   "keywords": [
     "duckdb",
     "typescript",
@@ -68,7 +68,7 @@
     "tinyglobby": "^0.2.17"
   },
   "bin": {
-    "typeduck": "./dist/cli.js"
+    "duck-types": "./dist/cli.js"
   },
   "publishConfig": {
     "access": "public"

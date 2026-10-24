@@ -29,7 +29,7 @@
       "!pnpm-lock.yaml",
       "!dist",
       "!tests/fixtures",
-      "!**/typeduck.d.ts",
+      "!**/duck-types.d.ts",
       "!**/*.md"
     ]
   }

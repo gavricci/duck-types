@@ -4,7 +4,7 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { type GenerateOptions, generate } from '../generate/index.js';
 
-export const USAGE = `Usage: typeduck generate [globs...] [options]
+export const USAGE = `Usage: duck-types generate [globs...] [options]
 
 Scans TypeScript sources for sql('...') calls, describes each query against
 DuckDB, and writes their row and parameter types as a module augmentation.
@@ -12,13 +12,13 @@ DuckDB, and writes their row and parameter types as a module augmentation.
 Options:
   -d, --database <file>  DuckDB file to describe queries against (opened read-only)
   -i, --init <file>      SQL to run first, e.g. schema DDL (in-memory by default)
-  -o, --out <file>       Output file (default: typeduck.d.ts)
+  -o, --out <file>       Output file (default: duck-types.d.ts)
   -c, --cwd <dir>        Project directory (default: current directory)
       --check            Exit 1 if the output file is out of date; write nothing
   -w, --watch            Regenerate when source files change
   -h, --help
 
-Defaults come from typeduck.config.json in the project directory when present:
+Defaults come from duck-types.config.json in the project directory when present:
   { "include": ["src/**/*.ts"], "database": "...", "init": "...", "out": "..." }
 Default globs: src/**/*.ts src/**/*.tsx`;
 
@@ -68,7 +68,7 @@ export async function main(argv: string[], options: MainOptions = {}): Promise<n
     init: values.init ?? config.init,
     cwd,
   };
-  const out = resolve(cwd, values.out ?? config.out ?? 'typeduck.d.ts');
+  const out = resolve(cwd, values.out ?? config.out ?? 'duck-types.d.ts');
 
   const runOnce = async (): Promise<number> => {
     const result = await generate(generateOptions);
@@ -78,7 +78,7 @@ export async function main(argv: string[], options: MainOptions = {}): Promise<n
     if (values.check) {
       const current = await readFile(out, 'utf8').catch(() => null);
       if (current !== result.declarations) {
-        stderr(`${rel(cwd, out)} is out of date; run typeduck generate`);
+        stderr(`${rel(cwd, out)} is out of date; run duck-types generate`);
         return 1;
       }
     } else {
@@ -103,7 +103,7 @@ function rel(cwd: string, path: string): string {
 }
 
 async function readConfig(cwd: string): Promise<Config> {
-  const text = await readFile(resolve(cwd, 'typeduck.config.json'), 'utf8').catch(() => null);
+  const text = await readFile(resolve(cwd, 'duck-types.config.json'), 'utf8').catch(() => null);
   return text === null ? {} : (JSON.parse(text) as Config);
 }
 

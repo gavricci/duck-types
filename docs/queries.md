@@ -75,10 +75,10 @@ await db.transaction(async (tx) => {
 await db.raw.run('checkpoint');
 ```
 
-`raw` is the `@duckdb/node-api` connection. Appenders, user-defined functions, `EXPLAIN` output, anything typeduck has no opinion on, is right there.
+`raw` is the `@duckdb/node-api` connection. Appenders, user-defined functions, `EXPLAIN` output, anything duck-types has no opinion on, is right there.
 
 ## Concurrency
 
-One client serialises its calls: a second `all()` starts when the first finishes. That is a DuckDB property — a connection runs one statement at a time — made explicit rather than a limitation added by typeduck. For parallel queries open several clients on the same file; DuckDB handles the locking.
+One client serialises its calls: a second `all()` starts when the first finishes. That is a DuckDB property — a connection runs one statement at a time — made explicit rather than a limitation added by duck-types. For parallel queries open several clients on the same file; DuckDB handles the locking.
 
 Prepared statements are cached by SQL text for the life of the client, so calling the same `Query` in a loop prepares it once.

@@ -1,4 +1,4 @@
-# typeduck documentation
+# duck-types documentation
 
 Every code block in these pages is copied from a file in [`examples/docs/src`](../examples/docs/src), which CI generates types for and typechecks — if a page says something compiles, it does.
 

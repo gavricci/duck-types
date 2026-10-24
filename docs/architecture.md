@@ -1,6 +1,6 @@
 # Architecture
 
-typeduck is small on purpose. This page explains the three decisions that shape it, so the limits make sense rather than feel arbitrary.
+duck-types is small on purpose. This page explains the three decisions that shape it, so the limits make sense rather than feel arbitrary.
 
 ## 1. DuckDB types the queries, not a parser
 
@@ -19,9 +19,9 @@ export function sql<const S extends string>(text: S): Query<SpecOf<S>['row'], Sp
 `sql('select …')` captures the literal type of its argument. `SpecOf<S>` indexes an interface:
 
 ```ts
-export interface Queries {}   // in typeduck
+export interface Queries {}   // in duck-types
 
-declare module 'typeduck' {   // in your generated typeduck.d.ts
+declare module 'duck-types' {   // in your generated duck-types.d.ts
   interface Queries {
     'select id from orders where id = $id': {
       row: { id: number | null };
@@ -31,15 +31,15 @@ declare module 'typeduck' {   // in your generated typeduck.d.ts
 }
 ```
 
-Interfaces merge across declarations, so the generated file *adds entries* to `Queries` without typeduck knowing about your project. A query the generator has not seen falls back to `Record<string, JS | null>` rows and unchecked parameters — it compiles, it runs, it is just not typed yet.
+Interfaces merge across declarations, so the generated file *adds entries* to `Queries` without duck-types knowing about your project. A query the generator has not seen falls back to `Record<string, JS | null>` rows and unchecked parameters — it compiles, it runs, it is just not typed yet.
 
 This is why `sql()` takes a plain string and not a tagged template: `TemplateStringsArray` has no literal type, so ``sql`…` `` could not look anything up. A template literal **without** `${}` is a string literal and works fine; one with interpolation is a `string` and falls back.
 
-There is no build plugin, no transformer, no runtime registry. Delete `typeduck.d.ts` and the code still runs; it just loses its types.
+There is no build plugin, no transformer, no runtime registry. Delete `duck-types.d.ts` and the code still runs; it just loses its types.
 
 ## 3. The scanner reads source files
 
-`typeduck generate` has to find the strings to describe. It parses every file in `include` with `@babel/parser` (TypeScript syntax, error-tolerant) and collects the argument of every call to an identifier bound by `import { sql } from 'typeduck'` — aliases included (`import { sql as q }`). See [`src/generate/scan.ts`](../src/generate/scan.ts).
+`duck-types generate` has to find the strings to describe. It parses every file in `include` with `@babel/parser` (TypeScript syntax, error-tolerant) and collects the argument of every call to an identifier bound by `import { sql } from 'duck-types'` — aliases included (`import { sql as q }`). See [`src/generate/scan.ts`](../src/generate/scan.ts).
 
 Why not the TypeScript compiler API? TypeScript 7's native compiler ships no JavaScript API, and depending on the user's TypeScript version for a build tool is fragile. Babel's parser is pure JS, 400 KB, and handles every TS/TSX file that `tsc` would.
 

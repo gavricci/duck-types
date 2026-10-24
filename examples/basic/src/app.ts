@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { createClient } from 'typeduck';
+import { createClient } from 'duck-types';
 import { loadOrders, ordersByCustomer } from './queries.ts';
 
 const db = await createClient();

@@ -1,4 +1,4 @@
-import { createClient, sql } from 'typeduck';
+import { createClient, sql } from 'duck-types';
 
 const ordersFor = sql('select id, total, placed_at from orders where customer = $customer');
 

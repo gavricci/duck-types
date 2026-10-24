@@ -1,5 +1,5 @@
-import { sql as q } from 'typeduck';
-import { sql } from 'typeduck';
+import { sql as q } from 'duck-types';
+import { sql } from 'duck-types';
 import { sql as notOurs } from 'other';
 
 export const byId = sql('select id, name from users where id = $id');

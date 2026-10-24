@@ -1,6 +1,6 @@
-import { sql } from 'typeduck';
+import { sql } from 'duck-types';
 
-// One column per family, so the generated typeduck.d.ts shows the mapping.
+// One column per family, so the generated duck-types.d.ts shows the mapping.
 export const zoo = sql(`
   select
     true                                   as bool,

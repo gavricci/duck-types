@@ -52,7 +52,7 @@ export class Client {
     return new Client(instance, connection);
   }
 
-  /** The underlying `@duckdb/node-api` connection, for anything typeduck does not cover. */
+  /** The underlying `@duckdb/node-api` connection, for anything duck-types does not cover. */
   get raw(): DuckDBConnection {
     return this.connection;
   }

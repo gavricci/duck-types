@@ -11,7 +11,7 @@ export interface FoundQuery {
 
 /**
  * Finds every `sql('...')` call in a TypeScript source file whose `sql` is
- * imported from `typeduck`, and returns the literal text passed to it.
+ * imported from `duck-types`, and returns the literal text passed to it.
  *
  * Only string literals and `${}`-free template literals count: anything else
  * cannot be typed by name, so the generator ignores it the way the type
@@ -58,11 +58,11 @@ export function scanSource(code: string, file: string): FoundQuery[] {
   return found;
 }
 
-/** Local names bound to typeduck's `sql`: `import { sql }` and `import { sql as q }`. */
+/** Local names bound to duck-types's `sql`: `import { sql }` and `import { sql as q }`. */
 function sqlBindings(statements: readonly Node[]): Set<string> {
   const names = new Set<string>();
   for (const statement of statements) {
-    if (statement.type !== 'ImportDeclaration' || statement.source.value !== 'typeduck') {
+    if (statement.type !== 'ImportDeclaration' || statement.source.value !== 'duck-types') {
       continue;
     }
     for (const specifier of statement.specifiers) {

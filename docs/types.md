@@ -1,6 +1,6 @@
 # Type mapping
 
-typeduck does not invent a value model. Rows come from `@duckdb/node-api`'s JS converter (`getRowObjectsJS`), and the generated types describe exactly what that converter returns. If the runtime and the types ever disagreed, the types would be lying; keeping one source of truth is the point.
+duck-types does not invent a value model. Rows come from `@duckdb/node-api`'s JS converter (`getRowObjectsJS`), and the generated types describe exactly what that converter returns. If the runtime and the types ever disagreed, the types would be lying; keeping one source of truth is the point.
 
 ## The table
 
@@ -52,7 +52,7 @@ export const zoo = sql(`
 ```
 
 ```ts
-// typeduck.d.ts (wrapped for reading)
+// duck-types.d.ts (wrapped for reading)
 row: {
   bool: boolean | null;
   int: number | null;
@@ -73,7 +73,7 @@ row: {
 
 ## Why everything is `| null`
 
-DuckDB reports a result column's type but not whether it can be NULL — a `NOT NULL` column becomes nullable after a `LEFT JOIN`, and the binder does not track that through. typeduck does not guess. If you know a column cannot be null, narrow it at the use site (`row.id!` or a check); if that gets tiresome in one place, `coalesce()` in the SQL moves the decision to where DuckDB can see it — the type stays `| null` (DuckDB still does not report it), but the value never is.
+DuckDB reports a result column's type but not whether it can be NULL — a `NOT NULL` column becomes nullable after a `LEFT JOIN`, and the binder does not track that through. duck-types does not guess. If you know a column cannot be null, narrow it at the use site (`row.id!` or a check); if that gets tiresome in one place, `coalesce()` in the SQL moves the decision to where DuckDB can see it — the type stays `| null` (DuckDB still does not report it), but the value never is.
 
 The same applies inside containers: list elements, struct fields, map keys and values may each be NULL on their own.
 
@@ -81,7 +81,7 @@ The same applies inside containers: list elements, struct fields, map keys and v
 
 A `BIGINT` can hold values a JS `number` cannot represent, so the converter returns `bigint` and the type says so. `count(*)` is a `BIGINT`: expect `2n`, not `2`. Cast in SQL if you want a number — `count(*)::integer` — and the type follows.
 
-`DECIMAL` becomes `number` via `toDouble()`. That is lossy for more than ~15 significant digits; if you need exact decimals, select `total::varchar` and parse with a decimal library, or `total * 100` into an integer type. This follows `@duckdb/node-api`'s converter; typeduck does not override it.
+`DECIMAL` becomes `number` via `toDouble()`. That is lossy for more than ~15 significant digits; if you need exact decimals, select `total::varchar` and parse with a decimal library, or `total * 100` into an integer type. This follows `@duckdb/node-api`'s converter; duck-types does not override it.
 
 Parameters are a little wider than rows where the binder is lenient: a `BIGINT` parameter accepts a plain `number`, a `DECIMAL` accepts a `bigint`.
 

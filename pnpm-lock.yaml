@@ -45,7 +45,7 @@ importers:
       '@duckdb/node-api':
         specifier: 2.0.0-r.1
         version: 2.0.0-r.1
-      typeduck:
+      duck-types:
         specifier: workspace:*
         version: link:../..
     devDependencies:
@@ -61,7 +61,7 @@ importers:
       '@duckdb/node-api':
         specifier: 2.0.0-r.1
         version: 2.0.0-r.1
-      typeduck:
+      duck-types:
         specifier: workspace:*
         version: link:../..
     devDependencies:
