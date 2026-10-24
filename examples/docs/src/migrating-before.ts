@@ -1,5 +1,9 @@
 // examples/docs/src/migrating-before.ts — plain @duckdb/node-api
-import { DuckDBDecimalValue, DuckDBInstance, DuckDBTimestampValue } from '@duckdb/node-api';
+import {
+  type DuckDBDecimalValue,
+  DuckDBInstance,
+  type DuckDBTimestampValue,
+} from '@duckdb/node-api';
 
 interface OrderRow {
   id: number;
