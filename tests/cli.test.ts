@@ -102,3 +102,11 @@ test('globRoot', () => {
   expect(globRoot('app.ts')).toBe('.');
   expect(globRoot('lib/db/queries.ts')).toBe('lib/db');
 });
+
+test('generate hints when no sql() calls are found', async () => {
+  expect(await run(['generate', 'nothing/**/*.ts'])).toBe(0);
+  expect(stderr).toEqual([
+    'duck-types.d.ts: 0 of 0 queries typed',
+    `no sql() calls found in nothing/**/*.ts under ${dir}; sql must be imported from 'duck-types' (run from the project directory, or pass --cwd)`,
+  ]);
+});

@@ -26,73 +26,48 @@ Run `duck-types generate` once (or in `--watch`), and every `sql('...')` in the 
 
 **Hand-written row types** — the interface, the cast and the SQL drift apart; nothing checks them.
 
-<table><tr><td>
-
 ```ts
+// before
 interface OrderRow { id: number; total: number }
 
-const reader = await conn.runAndReadAll(
-  'select id, total from orders'
-);
+const reader = await conn.runAndReadAll('select id, total from orders');
 const rows = reader.getRowObjectsJS() as OrderRow[];
-```
 
-</td><td>
-
-```ts
+// after — the type is produced by DuckDB and regenerated on change
 const orders = sql('select id, total from orders');
 
 const rows = await db.all(orders);
-// { id: number | null; total: number | null }[]
-// — produced by DuckDB, regenerated on change
+//    ^? { id: number | null; total: number | null }[]
 ```
-
-</td></tr></table>
 
 **Value normalisers** — every project grows its own `instanceof DuckDBDecimalValue` branch.
 
-<table><tr><td>
-
 ```ts
+// before
 const rows = reader.getRowObjects().map((r) => ({
   total: (r.total as DuckDBDecimalValue).toDouble(),
-  placed_at: new Date(Number(
-    (r.placed_at as DuckDBTimestampValue).micros / 1000n
-  )),
+  placed_at: new Date(Number((r.placed_at as DuckDBTimestampValue).micros / 1000n)),
 }));
-```
 
-</td><td>
-
-```ts
+// after — the @duckdb/node-api JS converter, and the types say what it returns
 const rows = await db.all(orders);
-rows[0].total;      // number
-rows[0].placed_at;  // Date
-// the @duckdb/node-api JS converter,
-// and the types say what it returns
+rows[0].total; // number
+rows[0].placed_at; // Date
 ```
-
-</td></tr></table>
 
 **Caught by `tsc`, not in production** — typos in columns and parameters are compile errors.
 
-<table><tr><td>
-
 ```ts
+// before
 const rows = reader.getRowObjectsJS();
-rows[0].totl;                       // undefined at runtime
-prepared.bind({ name: 'ann' });     // throws at runtime
-```
+rows[0].totl; // undefined at runtime
+prepared.bind({ name: 'ann' }); // throws at runtime
 
-</td><td>
-
-```ts
+// after
 const rows = await db.all(ordersFor, { customer: 'ann' });
-rows[0].totl;                           // error: no property 'totl'
+rows[0].totl; // error: no property 'totl'
 await db.all(ordersFor, { name: 'ann' }); // error: expected { customer }
 ```
-
-</td></tr></table>
 
 ## In the editor
 

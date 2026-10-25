@@ -86,6 +86,12 @@ export async function main(argv: string[], options: MainOptions = {}): Promise<n
     }
     const typed = result.queries.length - result.diagnostics.length;
     stderr(`${rel(cwd, out)}: ${typed} of ${result.queries.length} queries typed`);
+    if (result.queries.length === 0) {
+      stderr(
+        `no sql() calls found in ${generateOptions.include.join(' ')} under ${cwd}; ` +
+          "sql must be imported from 'duck-types' (run from the project directory, or pass --cwd)",
+      );
+    }
     return result.diagnostics.length > 0 ? 1 : 0;
   };
 

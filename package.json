@@ -1,9 +1,9 @@
 {
   "name": "duck-types",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Type-safe DuckDB client for TypeScript — row types inferred from your SQL, plain JS values out of the box.",
   "license": "MIT",
-  "author": "Oleksandr Havrylov",
+  "author": "Alex Gavrilov",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gavricci/duck-types.git"
